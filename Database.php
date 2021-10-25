@@ -35,7 +35,7 @@ class Database{
         }elseif($tableName == "merchant"){
             $col_name = "Name,Email,Merchant_Password,Image,Create_at,Current_at,Card_id";
         }elseif($tableName == "secondary_user"){
-            $col_name = "Name,Email,User_password,Email_permission,List_view_permission,Payment_permission,Forget_password_permission,Login_permission,Token,Merchant_id";
+            $col_name = "Name,Email,User_password,Email_permission,List_view_permission,Payment_permission,Forget_password_permission,Login_permission,Merchant_id";
         }elseif($tableName == "request"){
             $col_name = "Mail_from,Mail_to,Mail_cc,Mail_bcc,Subject,Body,Merchant_id,Response_id";
         }elseif($tableName == "response"){
@@ -58,7 +58,8 @@ class Database{
     // this function take tableName , Col_name, its col value and return id on that value.
     function get_id($tableName,$col_name,$value){
         $conn = self::build_connection();
-        $q = "select Id from $tableName where $col_name = $value";
+        $V = "'$value'";
+        $q = "select Id from $tableName where $col_name = $V";
         $result = $conn->query($q);
         $row = $result->fetch_assoc();
         $ret = $row['Id'];
@@ -108,7 +109,56 @@ class Database{
         $result = $conn->query($q);
         self::close_connection($conn);
     }
-
+    // take email and return token according to that email
+    function Get_token($tableName,$Email){
+        $conn = self::build_connection();
+        $E = "'$Email'";
+        $q = "select * from $tableName where Email = $E";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row['Token'];
+        self::close_connection($conn);
+        return $ret;
+    }
+    // take tableName and return last entry Id
+    function Get_response_refernce_key($tableName){
+        $conn = self::build_connection();
+        $q = "SELECT Id FROM $tableName ORDER BY Id  DESC LIMIT 1";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row['Id'];
+        self::close_connection($conn);
+        return $ret;
+    }
+    // take mercant Eamil and return its credit value
+    function get_credit($Email){
+        $conn = self::build_connection();
+        $E = "'$Email'";
+        $q = "select Credit from card where Id = (select Card_id from merchant where Email=$E)";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row['Credit'];
+        self::close_connection($conn);
+        return $ret;
+    }
+    // take mercant Eamil and return its Id value
+    function get_card_id($Email){
+        $conn = self::build_connection();
+        $E = "'$Email'";
+        $q = "select Id from card where Id = (select Card_id from merchant where Email=$E)";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row['Id'];
+        self::close_connection($conn);
+        return $ret;
+    }
+    //after email send, reduce credit function
+    function Update_credit($Id,$Credit){
+        $conn = self::build_connection();
+        $q = "UPDATE card SET Credit = $Credit where Id = $Id";
+        $result = $conn->query($q);
+        self::close_connection($conn);
+    }
 
 
     /**

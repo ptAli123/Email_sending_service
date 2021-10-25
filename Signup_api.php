@@ -72,7 +72,7 @@ class SignUpMerchant{
 
     function Reference_key($value){
         $db = new Database();
-        return $db->get_id("card","Card_number","'$value'");
+        return $db->get_id("card","Card_number",$value);
     }
 
 
