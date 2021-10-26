@@ -147,13 +147,15 @@
                     $db->insert("request",$pera);
                 }
                 else{
-                    die("Email sending failed...");
+                    echo json_encode(array('Message'=>'Email Sending Failed  :','status'=>204));
+                    die;//("Email sending failed...");
                 }
                
                 
             }
             else{
-                die("you are not allowed to Send Mail");
+                echo json_encode(array('Message'=>'you are not allowed to send Mail  :','status'=>204));
+                die;//("you are not allowed to Send Mail");
             }
         }
     }

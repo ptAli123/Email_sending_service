@@ -27,21 +27,24 @@
                 $Name = $data['Name'];
             }
             else{
-                die("Name is not valid");
+                echo json_encode(array('Message'=>'Name is not valid  :','status'=>204));
+                die;//("Name is not valid");
             }
     
             if ($validate->email_validate($data['Email']) == true){
                 $Email = $data['Email'];
             }
             else{
-                die("Email is not valid");
+                echo json_encode(array('Message'=>'Email is not valid  :','status'=>204));
+                die;//("Email is not valid");
             }
     
             if ($validate->password_validate($data['User_password']) == true){
                 $Merchant_password = $data['User_password'];
             }
             else{
-                die("Password is not valid");
+                echo json_encode(array('Message'=>'Password is not valid  :','status'=>204));
+                die;//("Password is not valid");
             }
             $Email_permission = $data['Email_permission'];
             $List_view_permission = $data['List_view_permission'];
@@ -72,14 +75,15 @@
             //self::Merchant_information($Merchnat_email,$Merchant_token);
             self::user_validation($Merchant_email,$Merchant_token,$Name,$Email,$User_password,$Email_permission,$List_view_permission,$Payment_permission,$Forget_password_permission,$Login_permission);
             if (self::match_token($Merchant_email,$Merchant_token) == true){
-                echo ("yes you are Valid");
+                //echo ("yes you are Valid");
                 $this->merchant_id = self::Reference_key($Merchant_email);
                 $db = new Database();
                 $pera = array($Name,$Email,$User_password,$Email_permission,$List_view_permission,$Payment_permission,$Forget_password_permission,$Login_permission,$this->merchant_id);
                 $db->insert("secondary_user",$pera);
             }
             else{
-                die("you are not allowed to Add User");
+                echo json_encode(array('Message'=>'you are not allowed to Add User  :','status'=>204));
+                die;//("you are not allowed to Add User");
             }
             
         }

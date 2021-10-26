@@ -18,16 +18,24 @@
                 $Email = $data['Email'];
             }
             else{
-                die("Email is not valid");
+                echo json_encode(array('Message'=>'Email is not valid  :','status'=>204));
+                die;//("Email is not valid");
             }
     
             if ($validate->password_validate($data['Password']) == true){
                 $Merchant_password = $data['Password'];
             }
             else{
-                die("Password is not valid");
+                echo json_encode(array('Message'=>'Password is not valid  :','status'=>204));
+                die;
+                //die("Password is not valid");
             }
         }
+        function json_conversion($Object)
+        {
+            return json_encode($Object);
+        }
+
         private function fetch_token($Email){
             $jwt = new Jwt($Email);
             return $jwt->generate_jwt(); 
@@ -41,9 +49,11 @@
                 $Token = self::fetch_token($Email);
                 $db->Update_token($Token,$Email);
                 $db->Set_login_time($Email);
-                echo $Token;
+                $TokenArr = array("Token"=>$Token);
+                echo self::json_conversion($TokenArr);
             }else{
-                echo "Your Email or Password is not valid";
+                //echo "Your Email or Password is not valid";
+                echo json_encode(array('Message'=>'Your Email or Password is not valid  :','status'=>204));
             }
         }
 

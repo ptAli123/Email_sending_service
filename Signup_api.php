@@ -22,21 +22,24 @@ class SignUpMerchant{
             $Name = $data['Name'];
         }
         else{
-            die("Name is not valid");
+            echo json_encode(array('Message'=>'Name is not valid  :','status'=>204));
+            die;//("Name is not valid");
         }
 
         if ($validate->email_validate($data['Email']) == true){
             $Email = $data['Email'];
         }
         else{
-            die("Email is not valid");
+            echo json_encode(array('Message'=>'Email is not valid  :','status'=>204));
+            die;//("Email is not valid");
         }
 
         if ($validate->password_validate($data['Merchant_password']) == true){
             $Merchant_password = $data['Merchant_password'];
         }
         else{
-            die("Password is not valid");
+            echo json_encode(array('Message'=>'Password is not valid  :','status'=>204));
+            die;//("Password is not valid");
         }
 
     }
@@ -51,14 +54,16 @@ class SignUpMerchant{
             $Card_number = $data['Card_number'];
         }
         else{
-            die("Card Number is not valid");
+            echo json_encode(array('Message'=>'Card Number is not valid  :','status'=>204));
+            die;//("Card Number is not valid");
         }
 
         if ($validate->Cvc_number_validation($data['Cvc_number']) == true){
             $Cvc_number = $data['Cvc_number'];
         }
         else{
-            die("Cvc Number is not valid");
+            echo json_encode(array('Message'=>'Cvc number is not valid  :','status'=>204));
+            die;//("Cvc Number is not valid");
         }
 
     }

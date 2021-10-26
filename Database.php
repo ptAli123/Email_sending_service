@@ -1,5 +1,5 @@
 <?php 
-
+require "vendor/stripe/stripe-php/init.php";
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -13,7 +13,7 @@ class Database{
             echo "Database Connection Error";
         }
         else{
-            echo "connection";
+            //echo "connection";
             return $conn;
         }
         
@@ -49,7 +49,7 @@ class Database{
 
         $q2 = "insert into $tableName($col_name) values($S2)";
         $conn->query($q2);
-        echo "Data successfully insert!";
+        //echo "Data successfully insert!";
         self::close_connection($conn);
     }
 
@@ -159,6 +159,82 @@ class Database{
         $result = $conn->query($q);
         self::close_connection($conn);
     }
+    // take Email and return merchant data
+    function List_view($Email){
+        $conn = self::build_connection();
+        $E = "'$Email'";
+        $q = "select * from merchant where Email = $E";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = array("Id"=>$row['Id'],
+                "Name"=>$row['Name'],
+                "Email"=>$row['Email'],
+                "Merchant_Password"=>$row['Merchant_Password'],
+                "Image"=>$row['Image'],
+                "Create_at"=>$row['Create_at']);
+        self::close_connection($conn);
+        return $ret;
+    }
+    //take merchant Id and return its users
+    function Secondary_user_list($Id){
+        $conn = self::build_connection();
+        $q = "select * from secondary_user where merchant_id = $Id";
+        $result = $conn->query($q);
+        $users = array();
+        if ($result->num_rows > 0){
+            while($row = $result->fetch_assoc()){
+                $ret = array("Id"=>$row['Id'],
+                "Name"=>$row['Name'],
+                "Email"=>$row['Email'],
+                "Email_permission"=>$row['Email_permission'],
+                "List_view_permission"=>$row['List_view_permission'],
+                "Payment_permission"=>$row['Payment_permission']);
+                $users[$row['Id']] = $ret;
+            }
+        }
+        self::close_connection($conn);
+        return $users;
+    }
+    // take marchant id and return its card info
+    function cart_list($Id){
+        $conn = self::build_connection();
+        $q = "select * from card where Id = (select Card_id from merchant where Id=$Id)";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = array("Id"=>$row['Id'],
+                "Card_number"=>$row['Card_number'],
+                "Credit"=>$row['Credit'],
+                "Cvc_number"=>$row['Cvc_number'],
+                "Valid_from"=>$row['Valid_from'],
+                "Valid_till"=>$row['Valid_till']);
+        self::close_connection($conn);
+        return $ret;
+    }
+    // take merchant id and return its requests and responses
+    function Request_list($Id){
+        $conn = self::build_connection();
+        $q = "select * from request where merchant_id = $Id";
+        $result = $conn->query($q);
+        $requests = array();
+        if ($result->num_rows > 0){
+            while($row = $result->fetch_assoc()){
+                $ID = $row['Id'];
+                $response_q = "select * from response where Id = (select response_id from request where Id=$ID)";
+                $response_result = $conn->query($response_q);
+                $response_row = $response_result->fetch_assoc();
+                $ret = array("Id"=>$row['Id'],
+                "Mail_from"=>$row['Mail_from'],
+                "Mail_to"=>$row['Mail_to'],
+                "Mail_cc"=>$row['Mail_cc'],
+                "Mail_bcc"=>$row['Mail_bcc'],
+                "Subject"=>$row['Subject'],
+                "Body"=>$row['Body'], array("Id"=>$response_row['Id'],"Status"=>$response_row['Status'], "error"=>$response_row['error'], "Description"=>$response_row['Description'] ));
+                $requests[$row['Id']] = $ret;
+            }
+        }
+        self::close_connection($conn);
+        return $requests;
+    }
 
 
     /**
@@ -173,6 +249,53 @@ class Database{
     //     self::close_connection($conn);
     //     return $data;
     // }
+
+        // strip testing db functions
+    public function getStripeToke($data){
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_URL => 'https://api.stripe.com/v1/tokens',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FRESH_CONNECT => true,
+            CURLOPT_POSTFIELDS => http_build_query($data),
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer sk_test_51JokwxCOcXmy6SZxZvU7H1ZymEdVFv5XeNF1qD1HCdPtoKMqYVHI9Uc7Y3esFdBZqL6xYvCoYtQCsAleb1NjoqeX00DWYDfcoj',
+                'Content-type: application/x-www-form-urlencoded',
+            ]
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        return $response;
+    }
+
+    public function charge($token,$amount){
+        $stripe = new \Stripe\StripeClient(
+            'sk_test_51JokwxCOcXmy6SZxZvU7H1ZymEdVFv5XeNF1qD1HCdPtoKMqYVHI9Uc7Y3esFdBZqL6xYvCoYtQCsAleb1NjoqeX00DWYDfcoj'
+        );
+        $stripe->charges->create([
+            'amount' => $amount,
+            'currency' => 'usd',
+            'source' => $token,
+            'description' => 'balance top up',
+        ]);
+
+        return $stripe;
+    }
+    // public function addPayment($data,$merchantId,$amount){
+    //     $number = $data['card[number]'];
+    //     $expYear = $data['card[exp_year]'];
+    //     $expMonth = $data['card[exp_month]'];
+    //     $cvc = $data['card[cvc]'];
+    //     //update database
+    //     echo 
+        
+    // }
+
 
     /**
      * This function is used to select user from table with the specific cnic.
