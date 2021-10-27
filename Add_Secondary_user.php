@@ -40,7 +40,7 @@
             }
     
             if ($validate->password_validate($data['User_password']) == true){
-                $Merchant_password = $data['User_password'];
+                $User_password = $data['User_password'];
             }
             else{
                 echo json_encode(array('Message'=>'Password is not valid  :','status'=>204));
@@ -80,6 +80,7 @@
                 $db = new Database();
                 $pera = array($Name,$Email,$User_password,$Email_permission,$List_view_permission,$Payment_permission,$Forget_password_permission,$Login_permission,$this->merchant_id);
                 $db->insert("secondary_user",$pera);
+                echo json_encode(array('Message'=>'You have Successfully Add a Secondary User...:','status'=>200));
             }
             else{
                 echo json_encode(array('Message'=>'you are not allowed to Add User  :','status'=>204));

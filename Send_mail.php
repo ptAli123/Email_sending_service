@@ -134,11 +134,13 @@
             self::headers_function();
             self::user_validation($Merchant_email,$Merchant_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body);
             if (self::match_token($Merchant_email,$Merchant_token) == true){
-                echo ("yes you are Valid");
+                //echo ("yes you are Valid");
+                echo json_encode(array('Message'=>'Yes you are valid...:','status'=>200));
                 self::Credit_handle($Merchant_email);
                 $this->merchant_id = self::Merchant_reference_key($Merchant_email);
                 if (self::send_mail($Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body)){
-                    echo "Email successfully sent to $Mail_to...";
+                    //echo "Email successfully sent to $Mail_to...";
+                    echo json_encode(array('Message'=>'Email successfully sent to $Mail_to...:','status'=>200));
                     self::Generate_response();
                     $this->response_id = self::get_response_id();
 

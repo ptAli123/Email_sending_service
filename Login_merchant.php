@@ -2,7 +2,7 @@
     require "Database.php";
     require "validation.php";
     require "jwt.php";
-    class Login_merchant
+    class LoginMerchant
     {
         private $Token;
         function headers_function(){    
@@ -45,12 +45,13 @@
         {   self::headers_function();
             self::Login_validation($Email,$Merchant_password);
             $db = new Database();
-            if ($db->Search_login("merchant",$Email,$Merchant_password)){
+            if ($db->Search_login("merchant",$Email,$Merchant_password,"Merchant_password")){
                 $Token = self::fetch_token($Email);
                 $db->Update_token($Token,$Email);
-                $db->Set_login_time($Email);
+                //$db->Set_login_time($Email);
                 $TokenArr = array("Token"=>$Token);
                 echo self::json_conversion($TokenArr);
+                //echo json_encode(array('Message'=>'you are successfully Login up  :','status'=>200));
             }else{
                 //echo "Your Email or Password is not valid";
                 echo json_encode(array('Message'=>'Your Email or Password is not valid  :','status'=>204));
@@ -61,7 +62,7 @@
 
     $Email = null;
     $Merchant_password = null;
-    $Login = new Login_merchant();
+    $Login = new LoginMerchant();
     $Login->Login_api($Email,$Merchant_password);
 
 ?>

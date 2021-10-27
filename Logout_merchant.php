@@ -16,7 +16,7 @@
             self::Take_Crediants($Email);
             $db = new Database();
             $db->Logout_merchant($Email);
-
+            echo json_encode(array('Message'=>'You have Successfully Logout...:','status'=>200));
         }
     }
 

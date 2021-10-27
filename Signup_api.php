@@ -97,10 +97,10 @@ class SignUpMerchant{
         self::headers_function();
         self::Merchant_validation($Name,$Email,$Merchant_password);
         $Card_id = $this->Card_id;
-        $Create_at = date("H:i:s");
+        //$Create_at = date("H:i:s");
         $Current_at = date("H:i:s");
         $db = new Database();
-        $pera = array($Name,$Email,$Merchant_password,$Image,$Create_at,$Current_at,$Card_id);
+        $pera = array($Name,$Email,$Merchant_password,$Image,$Current_at,$Card_id);
         $db->insert($tableName,$pera);
 
     }
@@ -108,6 +108,7 @@ class SignUpMerchant{
     function Sign_Api($Name,$Email,$Merchant_password,$Card_number,$Cvc_number){
         self::Card_Api("card",$Card_number,$Cvc_number);
         self::Merchant_Api("merchant",$Name,$Email,$Merchant_password);
+        echo json_encode(array('Message'=>'you are successfully Sign up  :','status'=>200));
     }
 }
     $Name = null;

@@ -33,7 +33,7 @@ class Database{
         if ($tableName == "card"){
             $col_name = "Card_number,Cvc_number,Valid_from,Valid_till"; 
         }elseif($tableName == "merchant"){
-            $col_name = "Name,Email,Merchant_Password,Image,Create_at,Current_at,Card_id";
+            $col_name = "Name,Email,Merchant_Password,Image,Current_at,Card_id";
         }elseif($tableName == "secondary_user"){
             $col_name = "Name,Email,User_password,Email_permission,List_view_permission,Payment_permission,Forget_password_permission,Login_permission,Merchant_id";
         }elseif($tableName == "request"){
@@ -67,11 +67,11 @@ class Database{
         return $ret;
     }
     // this function take tableName , Email, Password and return true if entries exist and false if not.
-    function Search_login($tableName,$Email,$Password){
+    function Search_login($tableName,$Email,$Password,$password_col){
         $conn = self::build_connection();
         $E = "'$Email'";
         $P = "'$Password'";
-        $q = "select * from $tableName where Email = $E and Merchant_password = $P";
+        $q = "select * from $tableName where Email = $E and $password_col = $P";
         $result = $conn->query($q);
         if ($result->num_rows > 0){
             return true;
@@ -113,7 +113,7 @@ class Database{
     function Get_token($tableName,$Email){
         $conn = self::build_connection();
         $E = "'$Email'";
-        $q = "select * from $tableName where Email = $E";
+        $q = "select * from $tableName where Email = $E and new() <= data_add(Create_at,interval 15 minute)";
         $result = $conn->query($q);
         $row = $result->fetch_assoc();
         $ret = $row['Token'];
@@ -237,6 +237,91 @@ class Database{
     }
 
 
+    // below some functions is for admin action
+    function Merchant_list(){
+        $conn = self::build_connection();
+        $q = "select * from merchant";
+        $result = $conn->query($q);
+        $users = array();
+        if ($result->num_rows > 0){
+            while($row = $result->fetch_assoc()){
+                $ID = $row['Id'];
+                $card_q = "select * from card where Id = (select Card_id from merchant where Id=$ID)";
+                $card_result = $conn->query($card_q);
+                $card_row = $card_result->fetch_assoc();
+                $ret = array("Id"=>$row['Id'],
+                "Name"=>$row['Name'],
+                "Email"=>$row['Email'],
+                "Merchant_Password"=>$row['Merchant_Password'],
+                "Image"=>$row['Image'],
+                "Create_at"=>$row['Create_at'],array("Id"=>$card_row['Id'],
+                "Card_number"=>$card_row['Card_number'],
+                "Credit"=>$card_row['Credit'],
+                "Cvc_number"=>$card_row['Cvc_number'],
+                "Valid_from"=>$card_row['Valid_from'],
+                "Valid_till"=>$card_row['Valid_till']));
+                $users[$row['Id']] = $ret;
+            }
+        }
+        self::close_connection($conn);
+        return $users;
+    }
+
+
+    function request_complete_list(){
+        $conn = self::build_connection();
+        $q = "select * from request";
+        $result = $conn->query($q);
+        $requests = array();
+        if ($result->num_rows > 0){
+            while($row = $result->fetch_assoc()){
+                $ID = $row['Id'];
+                $response_q = "select * from response where Id = (select response_id from request where Id=$ID)";
+                $response_result = $conn->query($response_q);
+                $response_row = $response_result->fetch_assoc();
+                $ret = array("Id"=>$row['Id'],
+                "Mail_from"=>$row['Mail_from'],
+                "Mail_to"=>$row['Mail_to'],
+                "Mail_cc"=>$row['Mail_cc'],
+                "Mail_bcc"=>$row['Mail_bcc'],
+                "Subject"=>$row['Subject'],
+                "Body"=>$row['Body'], array("Id"=>$response_row['Id'],"Status"=>$response_row['Status'], "error"=>$response_row['error'], "Description"=>$response_row['Description'] ));
+                $requests[$row['Id']] = $ret;
+            }
+        }
+        self::close_connection($conn);
+        return $requests;
+    }
+
+    //Check Validation of Secondary User
+    function Check_permission($tableName,$Email,$permission){
+        $conn = self::build_connection();
+        $E = "'$Email'";
+        $q = "select $permission from $tableName where Email = $E";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row[$permission];
+        self::close_connection($conn);
+        return $ret;
+    }
+
+    // Low balance mail api
+    function Fetch_emails(){
+        $conn = self::build_connection();
+        $q = "select Email from merchant inner join card on(merchant.Card_id = card.Id) where card.Credit < 60";
+        $result = $conn->query($q);
+        $arr = array();
+        if ($result->num_rows > 0){
+            while($row = $result->fetch_assoc()){
+                $size = sizeof($arr);
+                $arr[$size] = $row['Email'];
+                $size = $size + 1;
+            }
+        }
+        self::close_connection($conn);
+        return $arr;
+    }
+
     /**
      * This function is used to fetch users from table.
      */
@@ -250,7 +335,7 @@ class Database{
     //     return $data;
     // }
 
-        // strip testing db functions
+        // stripe db functions
     public function getStripeToke($data){
         $curl = curl_init();
 

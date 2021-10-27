@@ -47,16 +47,20 @@
             self::headers_function();
             self::user_validation($Merchant_email,$Merchant_token);
             if (self::match_token($Merchant_email,$Merchant_token) == true){
-                echo "yes you are valid";
+                //echo "yes you are valid";
+                echo json_encode(array('Message'=>'yes you are valid...:','status'=>200));
                 $db = new Database();
                 $stripTokenResponse = $db->getStripeToke($this->data);
                 $stripTokenRes = json_decode($stripTokenResponse);
                 $stripToken =  $stripTokenRes->id;
                 $addBalance = $db->charge($stripToken,$this->amount);
                 self::Credit_update($Merchant_email);
+                echo json_encode(array('Message'=>'You have Successful...:','status'=>200));
             }
             else{
-                die("you are not allowed to Payment");
+                //die("you are not allowed to Payment");
+                echo json_encode(array('Message'=>'you are not allowed to Payment...:','status'=>200));
+                die;
             }
         }
     }
