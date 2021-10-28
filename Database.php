@@ -113,7 +113,7 @@ class Database{
     function Get_token($tableName,$Email){
         $conn = self::build_connection();
         $E = "'$Email'";
-        $q = "select * from $tableName where Email = $E and new() <= data_add(Create_at,interval 15 minute)";
+        $q = "select * from $tableName where Email = $E";// and new() <= data_add(Create_at,interval 15 minute)";
         $result = $conn->query($q);
         $row = $result->fetch_assoc();
         $ret = $row['Token'];
@@ -320,6 +320,28 @@ class Database{
         }
         self::close_connection($conn);
         return $arr;
+    }
+
+    //take User_mail and return merchant Mail
+    function Get_Mercant_mail($User_email){
+        $conn = self::build_connection();
+        $E = "'$User_email'";
+        $q = "select Email from merchant where Id = (select Merchant_id from secondary_user where Email = $E)";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row['Email'];
+        self::close_connection($conn);
+        return $ret;
+    }
+
+     // this function take Token and Email, update token and status for login User
+     function Update_user_token($Token,$Email){
+        $conn = self::build_connection();
+        $T = "'$Token'";
+        $E = "'$Email'";
+        $q = "UPDATE secondary_user SET Token = $T where Email = $E";
+        $result = $conn->query($q);
+        self::close_connection($conn);
     }
 
     /**

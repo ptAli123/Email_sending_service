@@ -11,12 +11,12 @@
             header("Access-Control-Allow-Methods:POST");
         }
 
-        function user_validation(&$Merchant_email,&$Merchant_token,&$Mail_from,&$Mail_to,&$Mail_cc,&$Mail_bcc,&$Subject,&$Body){
+        function user_validation(&$User_email,&$User_token,&$Mail_from,&$Mail_to,&$Mail_cc,&$Mail_bcc,&$Subject,&$Body){
             $validate = new Validate();
             $data = json_decode(file_get_contents("php://input"),true);
            
-            $Merchant_email = $data['Merchant_Email'];
-            $Merchant_token = $data['Merchant_Token'];
+            $User_email = $data['User_Email'];
+            $User_token = $data['User_Token'];
             
     
             if ($validate->email_validate($data['Mail_from']) == true){
@@ -58,7 +58,7 @@
 
         private function match_token($Email,$Token){
             $db = new Database();
-            $T = $db->Get_token("merchant",$Email);
+            $T = $db->Get_token("secondary_user",$Email);
             // echo $T;
             // echo $Token;
             if ($T == $Token){
@@ -130,41 +130,62 @@
             return $db->Get_response_refernce_key("response");
         }
 
-        function Send_email_api($Merchant_email,$Merchant_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body){
-            self::headers_function();
-            self::user_validation($Merchant_email,$Merchant_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body);
-            if (self::match_token($Merchant_email,$Merchant_token) == true){
-                //echo ("yes you are Valid");
-                echo json_encode(array('Message'=>'Yes you are valid...:','status'=>200));
-                self::Credit_handle($Merchant_email);
-                $this->merchant_id = self::Merchant_reference_key($Merchant_email);
-                if (self::send_mail($Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body)){
-                    //echo "Email successfully sent to $Mail_to...";
-                    echo json_encode(array('Message'=>'Email successfully sent to $Mail_to...:','status'=>200));
-                    self::Generate_response();
-                    $this->response_id = self::get_response_id();
-
-                    $db = new Database();
-                    $pera = array($Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body,$this->merchant_id,$this->response_id);
-                    $db->insert("request",$pera);
-                }
-                else{
-                    echo json_encode(array('Message'=>'Email Sending Failed  :','status'=>204));
-                    die;//("Email sending failed...");
-                }
-               
-                
+        function Check_permissoin($Email){
+            $db = new Database();
+            if ($db->Check_permission("secondary_user",$Email,"Email_permission") == 1){
+                return true;
             }
             else{
-                echo json_encode(array('Message'=>'you are not allowed to send Mail  :','status'=>204));
-                die;//("you are not allowed to Send Mail");
+                return false;
+            }
+        }
+
+        function Merchant_mail($User_email){
+            $db = new Database();
+            return $db->Get_Mercant_mail($User_email);
+        }
+
+        function Send_email_api($User_email,$User_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body){
+            self::headers_function();
+            self::user_validation($User_email,$User_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body);
+            if (self::Check_permissoin($User_email)){
+                if (self::match_token($User_email,$User_token) == true){
+                    //echo ("yes you are Valid");
+                    echo json_encode(array('Message'=>'Yes you are valid...:','status'=>200));
+                    $Merchant_mail = self::Merchant_mail($User_email);
+                    self::Credit_handle($Merchant_mail);
+                    $this->merchant_id = self::Merchant_reference_key($Merchant_mail);
+                    if (self::send_mail($Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body)){
+                        //echo "Email successfully sent to $Mail_to...";
+                        echo json_encode(array('Message'=>'Email successfully sent to $Mail_to...:','status'=>200));
+                        self::Generate_response();
+                        $this->response_id = self::get_response_id();
+
+                        $db = new Database();
+                        $pera = array($Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body,$this->merchant_id,$this->response_id);
+                        $db->insert("request",$pera);
+                    }
+                    else{
+                        echo json_encode(array('Message'=>'Email Sending Failed  :','status'=>204));
+                        die;//("Email sending failed...");
+                    }
+                
+                    
+                }
+                else{
+                    echo json_encode(array('Message'=>'you are not allowed to send Mail  :','status'=>204));
+                    die;//("you are not allowed to Send Mail");
+                }
+            }
+            else{
+                echo json_encode(array('Message'=>'You Are not Allowed to Send Mail  :','status'=>204));
             }
         }
     }
 
 
-    $Merchant_email = null;
-    $Merchant_token = null;
+    $User_email = null;
+    $User_token = null;
     $Mail_from = null;
     $Mail_to = null;
     $Mail_cc = null;
@@ -172,5 +193,7 @@
     $Subject = null;
     $Body = null;
     $sendMalik = new SendMail();
-    $sendMalik->Send_email_api($Merchant_email,$Merchant_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body);
+    $sendMalik->Send_email_api($User_email,$User_token,$Mail_from,$Mail_to,$Mail_cc,$Mail_bcc,$Subject,$Body);
+
+
 ?>

@@ -54,16 +54,13 @@
         {   self::headers_function();
             self::Login_validation($Email,$User_password);
             if (self::Check_permissoin($Email)){
-
-            
                 $db = new Database();
                 if ($db->Search_login("secondary_user",$Email,$User_password,"User_password")){
                     $Token = self::fetch_token($Email);
-                    $db->Update_token($Token,$Email);
-                    $db->Set_login_time($Email);
+                    $db->Update_user_token($Token,$Email);
                     $TokenArr = array("Token"=>$Token);
                     echo self::json_conversion($TokenArr);
-                    echo json_encode(array('Message'=>'you are successfully Login up  :','status'=>200));
+                    //echo json_encode(array('Message'=>'you are successfully Login up  :','status'=>200));
                 }else{
                     //echo "Your Email or Password is not valid";
                     echo json_encode(array('Message'=>'Your Email or Password is not valid  :','status'=>204));
