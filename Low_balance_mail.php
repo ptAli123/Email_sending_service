@@ -26,7 +26,7 @@
             $headers = "From: pt.alihussain@gmail.com"; // mail from will be change after testing
             for($i = 0; $i < sizeof($this->Emails); $i++){
                 $to_email = $this->Emails[$i];
-                //mail($to_email, $subject, $body, $headers);
+                mail($to_email, $subject, $body, $headers);
             }
         }
         function Low_balance_mail(){
@@ -34,6 +34,7 @@
             //self::Take_email();
             self::fetch_email();
             self::Send_mails();
+            echo json_encode(array('Message'=>'Mails Successfully send to Low Balanced Merchants  :','status'=>200));
         }
      }
 

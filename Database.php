@@ -113,7 +113,7 @@ class Database{
     function Get_token($tableName,$Email){
         $conn = self::build_connection();
         $E = "'$Email'";
-        $q = "select * from $tableName where Email = $E and new() <= data_add(Create_at,interval 15 minute)";
+        $q = "select * from $tableName where Email = $E";// and new() <= data_add(Create_at,interval 15 minute)";
         $result = $conn->query($q);
         $row = $result->fetch_assoc();
         $ret = $row['Token'];
@@ -322,18 +322,29 @@ class Database{
         return $arr;
     }
 
-    /**
-     * This function is used to fetch users from table.
-     */
-    // function Fetch_list($tableName)
-    // {
-    //     $conn = self::build_connection();
-    //     $q = "select * from ".$tableName;
-    //     $result = $conn->query($q);
-    //     $data = $result->fetch_all(MYSQLI_ASSOC);
-    //     self::close_connection($conn);
-    //     return $data;
-    // }
+    //take User_mail and return merchant Mail
+    function Get_Mercant_mail($User_email){
+        $conn = self::build_connection();
+        $E = "'$User_email'";
+        $q = "select Email from merchant where Id = (select Merchant_id from secondary_user where Email = $E)";
+        $result = $conn->query($q);
+        $row = $result->fetch_assoc();
+        $ret = $row['Email'];
+        self::close_connection($conn);
+        return $ret;
+    }
+
+     // this function take Token and Email, update token and status for login User
+     function Update_user_token($Token,$Email){
+        $conn = self::build_connection();
+        $T = "'$Token'";
+        $E = "'$Email'";
+        $q = "UPDATE secondary_user SET Token = $T where Email = $E";
+        $result = $conn->query($q);
+        self::close_connection($conn);
+    }
+
+  
 
         // stripe db functions
     public function getStripeToke($data){
@@ -371,59 +382,6 @@ class Database{
 
         return $stripe;
     }
-    // public function addPayment($data,$merchantId,$amount){
-    //     $number = $data['card[number]'];
-    //     $expYear = $data['card[exp_year]'];
-    //     $expMonth = $data['card[exp_month]'];
-    //     $cvc = $data['card[cvc]'];
-    //     //update database
-    //     echo 
-        
-    // }
-
-
-    /**
-     * This function is used to select user from table with the specific cnic.
-     */
-    // function search()        // searching employee by cnic
-    // {
-    //     $conn = self::build_connection();
-    //     //$q = "select * from ".$tableName ." WHERE cnic='{$cnic}'";
-    //     $q = "select count(*) as count from card";
-    //     $result = $conn->query($q);
-    //     $row = $result->fetch_assoc();
-    //     echo $row['count']+1;
-    //     self::close_connection($conn);
-    //     // if($result->num_rows > 0){
-    //     //     return true;
-    //     // }
-    //     // else{
-    //     //     return false;
-    //     // }
-    // }
-
-    /**
-     * This functioon is used to search employee with specific CNIC and name.
-     */
-    // function searchEmployee($tableName,$Name,$CNIC){
-    //     $conn = self::build_connection(); 
-    //     $N = "'$Name'";
-    //     $C = "'$CNIC'";
-    //     $q = "select * from $tableName where CNIC = $C and Name = $N";
-    //     $result = $conn->query($q);
-    //     if ($result->num_rows > 0){
-    //         $output = $result->fetch_assoc();
-    //     }else{
-    //         $output = array('Message' => 'No Employee Match :','status'=>'204');
-    //     }
-    //     self::close_connection($conn);
-    //        return $output;
-    //     }
-   
 }
-// $database = new Database();
-// $T = "merchant";
-// $pera = array("987654321","50.234","1234","4444-11-8","9999-2-2");
-// $database->insert($T,$pera);
 
 ?>
